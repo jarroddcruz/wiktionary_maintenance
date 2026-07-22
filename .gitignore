@@ -1,0 +1,6 @@
+# output files do not need to be pushed or pulled... yet
+spreadsheets
+output_files
+cache
+__pycache__
+.DS_Store
