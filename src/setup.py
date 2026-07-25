@@ -8,7 +8,7 @@ ensuring API connection is successful
 '''
 
 import src.cache as cache
-import json
+import os
 from src.api_requests import get_category_members
 
 api_url_prefix = "https://"
@@ -22,7 +22,11 @@ def set_credentials():
         wikt_username = input("Enter Wiktionary username: ")
         email = input("Enter email for contact: ")
 
-        if input(f'Does this look correct (Y/n): {project}/{version} (User:{wikt_username}; {email}): ') != "Y":
+        user_agent = f'{project}/{version} (User:{wikt_username}; {email})'
+        print(f'Your credentials are: {user_agent}')
+        response = input('Does this look correct? (Y/n): ')
+
+        if response != "Y":
             continue
         else:
             break
@@ -34,7 +38,9 @@ def set_credentials():
         'email': email
     }
 
-    return cache.write_json("last_credentials", contents)
+    cache.write_json("last_credentials", contents)
+
+    return user_agent
 
 # Attempts to get last used user credentials to speed things up
 def get_credentials():
@@ -62,7 +68,7 @@ def get_credentials():
 def set_wikt_edition():
     while True:
         valid_eds = ["en"] # Should this be placed in a separate file storing all constants?
-        edition = input(f'\nList of supported Wiktionary editions — {valid_eds}\nSelect a Wiktionary edition to work with from the list above:\n')
+        edition = input(f'\nList of supported Wiktionary editions — {valid_eds}\nSelect a Wiktionary edition to work with from the list above: ')
         if edition in valid_eds:
             return edition
         else:
@@ -101,21 +107,23 @@ def pick_language(edition, api_url, headers):
 
     return language
 
-
 def main():
     # Set up credentials for an informative user-agent header based on credentials from the last session, if possible
+    user_agent = ""
     print("Checking if last used credentials are available... ", end="")
     credentials = get_credentials()
+    
     if credentials == {}:
         print("\nERROR: Failed to retrieve last used credentials. Please input new credentials.")
-        set_credentials()
+        user_agent = set_credentials()
 
     else:
         print("Successful!")
         user_agent = f'{credentials["project"]}/{credentials["version"]} (User:{credentials["wikt_username"]}; {credentials["email"]}'
-        response = input(f'Does this look correct (Y/n): {user_agent}: ')
+        print(f'Your credentials are: {user_agent}')
+        response = input('Does this look correct? (Y/n): ')
         if response != "Y":
-            set_credentials()
+            user_agent = set_credentials()
         else:
             pass
 
@@ -133,5 +141,9 @@ def main():
     Allow pick_language to retrieve the language code as well, and perhaps pick using the language code to retrieve the language name too
     '''
     print(f'Selection of {language} confirmed.')
+
+    # Set up useful directories 
+    os.makedirs(os.path.dirname("input_files/"), exist_ok=True)
+    os.makedirs(os.path.dirname("output_files/"), exist_ok=True)
 
     return [True, api_url, language, headers]

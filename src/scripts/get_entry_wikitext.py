@@ -2,13 +2,13 @@
 Functions for accessing page contents from Wiktionary as wikitext
 '''
 
+import os
 import csv
 import re
-import sys
 
 from src.api_requests import get_category_members, get_pages_as_json
 
-def get_entry_contents(api_url, language, headers):
+def run(api_url, language, headers):
     '''
     TO DO: Allow this to function without having to do get_category_members; this is just to prove it works 
     '''
@@ -26,16 +26,26 @@ def get_entry_contents(api_url, language, headers):
     # Fetch definitions
     pages = get_pages_as_json(api_url, language, wikt_headwords, headers)
 
-    # csv output
-    filename = input("Provide a filename for the output: ")
-    filename = "output_files/" + filename
-    if not filename.endswith(".csv"):
-        filename += ".csv"
 
-    with open(filename, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Word", "Definitions"])
-        writer.writerows(pages.items())
-        f.close()
+    while True:
+        # csv output
+        filename = input("Provide a filename for the output: ")
+        filename = "output_files/" + filename
+        if not filename.endswith(".csv"):
+            filename += ".csv"
+
+        if os.path.isfile(filename):
+            response = input(f'WARNING: {filename} already exists. Overwrite? (Y/n): ')
+            if response == "Y":
+                pass
+            else:
+                continue
+                
+        with open(filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Word", "Definitions"])
+            writer.writerows(pages.items())
+            f.close()
+            break
 
     print(f"\nSaved {len(wikt_headwords)} entries to {filename}")

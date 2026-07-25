@@ -1,6 +1,6 @@
 
 # Introduction
-This repository contains work on tools designed for endangered language speakers to upload and maintain dictionary entries on Wiktionary through a master spreadsheet. We are currently working with a speaker of San Juan Quiahije Chatino.
+This is a basic command line tool designed for endangered language speakers to upload and maintain entries on Wiktionary through a master spreadsheet of dictionary data. We are currently working with a speaker of San Juan Quiahije Chatino.
 
 This work is being conducted at the Machine Learning for Endangered Language Documentation (MELD) Lab @ University of Florida. 
 
@@ -19,3 +19,9 @@ This work is being conducted at the Machine Learning for Endangered Language Doc
 https://stackoverflow.com/questions/16511337/correct-way-to-try-except-using-python-requests-module 
 
 * https://www.mediawiki.org/wiki/API:Query: "To get data about pages in a certain category, instead of querying list=categorymembers and then querying again with pageids set to all the returned pages, combine the two API calls into one by using generator=categorymembers."
+
+<!--
+* scripts folder to house the various tools that are listed in the main menu; allows some modularity and customization, as well as scaffolding for newcomers to the development team
+
+* Jupyter Notebook template to develop scripts for student familiarity?
+-->

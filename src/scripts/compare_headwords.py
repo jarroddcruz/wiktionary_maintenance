@@ -1,3 +1,4 @@
+
 '''
 Functions to perform various kinds of diffchecks between Wiktionary and a spreadsheet
 '''
@@ -6,16 +7,16 @@ import pandas as pd
 from src.api_requests import get_category_members
 
 # Compare headwords found in spreadsheet versus those found in a certain category
-def compare_headwords(api_url, language, headers):
+def run(api_url, language, headers):
     sheet_headwords = []
 
     while True:
         try:
             # Prompt user to name a valid csv
-            filename = input("Enter name of csv to read in spreadsheets folder: ")
+            filename = input("Enter name of csv to read in input_files folder: ")
 
             # Read csv file, print numbered list of columns
-            data = pd.read_csv("spreadsheets/" + filename + ".csv")
+            data = pd.read_csv("input_files/" + filename + ".csv")
             print(f'Columns found in {filename}.csv: ')
             for i in range(0, len(data.columns.values)):
                 print(f'{i}: {data.columns.values[i]}')
@@ -28,7 +29,7 @@ def compare_headwords(api_url, language, headers):
         except KeyError:
             print(f'ERROR: Invalid number.')
         except FileNotFoundError:
-            print(f'ERROR: {filename}.csv not found. Did you put it in the \'spreadsheets\' folder?')
+            print(f'ERROR: {filename}.csv not found. Did you put it in the \'input_files\' folder?')
 
     # Prompt user to name a valid category whose entries they want to compare headwords with
     response = input(f'What category would you like to compare with (ex. \"{language} proper nouns\")?\nTIP: Simply type \"all\" to compare with \"{language} lemmas\".\n')
@@ -47,11 +48,6 @@ def compare_headwords(api_url, language, headers):
     wikt_missing = list(sheet_set - wikt_set)
     wikt_additional = list(wikt_set - sheet_set)
 
-    ret = {
-        'in_wikt': in_wikt,
-        'wikt_missing': wikt_missing,
-        'wikt_additional': wikt_additional,
-        
-    }
-
-    return ret
+    print(f'Matches with wikt: {in_wikt}\n')
+    print(f'Missing from wikt: {wikt_missing}\n')
+    print(f'Additional in wikt: {wikt_additional}')

@@ -1,5 +1,5 @@
 # output files do not need to be pushed or pulled... yet
-spreadsheets
+input_files
 output_files
 cache
 __pycache__
