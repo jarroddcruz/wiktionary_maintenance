@@ -8,6 +8,10 @@ from src.api_requests import get_category_members
 
 # Compare headwords found in spreadsheet versus those found in a certain category
 def run(api_url, language, headers):
+    if None in [api_url, language, headers]:
+        print("ERROR: You not indicate you are working with Wiktionary this session. Please reset this tool and try again.")
+        return
+    
     sheet_headwords = []
 
     while True:

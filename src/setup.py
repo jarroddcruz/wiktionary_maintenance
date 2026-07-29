@@ -77,6 +77,8 @@ def set_wikt_edition():
 
 # Establishes which language is being worked on within the chosen Wiktionary edition
 def pick_language(edition, api_url, headers):
+    scanned_wikt = False
+
     language = ""
 
     while True:
@@ -91,16 +93,20 @@ def pick_language(edition, api_url, headers):
             all_langs = get_category_members(api_url, "All_languages", headers)
             all_langs_json = {'langs': all_langs}
             cache.write_json(f'{edition}_langs', all_langs_json)
+            scanned_wikt = True
 
-        '''
-        TO DO:
-        Refactor so that if the language isn't found in cache, it requests category members, caches it once, then checks the cache
-
-        Subsequent checks in the same sessions do not re-cache to reduce API requests
-        '''
-        
         if f'Category:{language} language' not in all_langs:
-            print(f'ERROR: {language} not found on Wiktionary')
+            if scanned_wikt == False:
+                all_langs = get_category_members(api_url, "All_languages", headers)
+                all_langs_json = {'langs': all_langs}
+                cache.write_json(f'{edition}_langs', all_langs_json)
+                scanned_wikt = True
+
+                if f'Category:{language} language' not in all_langs:
+                    print(f'ERROR: {language} not found on Wiktionary')
+
+            else:
+                print(f'ERROR: {language} not found on Wiktionary')
             
         else:
             break
@@ -110,37 +116,43 @@ def pick_language(edition, api_url, headers):
 def main():
     # Set up credentials for an informative user-agent header based on credentials from the last session, if possible
     user_agent = ""
-    print("Checking if last used credentials are available... ", end="")
-    credentials = get_credentials()
-    
-    if credentials == {}:
-        print("\nERROR: Failed to retrieve last used credentials. Please input new credentials.")
-        user_agent = set_credentials()
+    api_url, language, headers = None, None, None
 
+    response = input("Are you planning on working with Wiktionary in this session? (Y/n): ")
+    if response != "Y":
+        pass
     else:
-        print("Successful!")
-        user_agent = f'{credentials["project"]}/{credentials["version"]} (User:{credentials["wikt_username"]}; {credentials["email"]}'
-        print(f'Your credentials are: {user_agent}')
-        response = input('Does this look correct? (Y/n): ')
-        if response != "Y":
+        print("Checking if last used Wiktionary API credentials are available... ", end="")
+        credentials = get_credentials()
+        
+        if credentials == {}:
+            print("\nERROR: Failed to retrieve last used credentials. Please input new credentials.")
             user_agent = set_credentials()
+
         else:
-            pass
+            print("Successful!")
+            user_agent = f'{credentials["project"]}/{credentials["version"]} (User:{credentials["wikt_username"]}; {credentials["email"]}'
+            print(f'Your credentials are: {user_agent}')
+            response = input('Does this look correct? (Y/n): ')
+            if response != "Y":
+                user_agent = set_credentials()
+            else:
+                pass
 
-    headers = {
-        "User-Agent": user_agent
-    }
+        headers = {
+            "User-Agent": user_agent
+        }
 
-    # Set up correct Wiktionary edition to work with
-    edition = set_wikt_edition()
-    api_url = api_url_prefix + edition + api_url_suffix
-    
-    # Set up correct language to work with in the chosen Wiktionary edition
-    language = pick_language(edition, api_url, headers)
-    '''
-    Allow pick_language to retrieve the language code as well, and perhaps pick using the language code to retrieve the language name too
-    '''
-    print(f'Selection of {language} confirmed.')
+        # Set up correct Wiktionary edition to work with
+        edition = set_wikt_edition()
+        api_url = api_url_prefix + edition + api_url_suffix
+        
+        # Set up correct language to work with in the chosen Wiktionary edition
+        language = pick_language(edition, api_url, headers)
+        '''
+        Allow pick_language to retrieve the language code as well, and perhaps pick using the language code to retrieve the language name too
+        '''
+        print(f'Selection of {language} confirmed.')
 
     # Set up useful directories 
     os.makedirs(os.path.dirname("input_files/"), exist_ok=True)

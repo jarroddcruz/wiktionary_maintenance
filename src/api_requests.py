@@ -3,7 +3,6 @@ This contains functions carrying out the basic API requests.
 '''
 
 import requests
-import time
 import sys
 import re
 
@@ -60,6 +59,7 @@ def get_category_members(api_url, category, headers):
 
 # Retrieve JSON of some named pages
 def get_pages_as_json(api_url, language, pages, headers):
+    # Parameters for the API request
     params = {
     "action": "query",
     "prop": "revisions",
@@ -72,10 +72,12 @@ def get_pages_as_json(api_url, language, pages, headers):
     page_contents = {}
 
     while True:
+        # Request pages 
         r = requests.get(api_url, params=params, headers=headers) 
         data = r.json()
         pages_from_json = data.get("query", {}).get("pages", {})
 
+        # Go through the JSON data returned
         for i, id in enumerate(pages_from_json):
             word = pages_from_json.get(id, {}).get("title", {})
             print(f"[{i+1}/{len(pages)}] {word}")
@@ -92,20 +94,25 @@ def get_pages_as_json(api_url, language, pages, headers):
             
             entries = []
 
+            # Isolate part of the page contents that belongs to the language being worked on
             for line in text.splitlines():
+                # Stop collecting language at the next ==header== after ==language==
                 if in_lang == True and re.search("==[^=]", line[:3]):
                     in_lang = False
                     break
 
+                # Start collecting wikitext starting at "==LANGUAGE=="
                 if line.startswith(f'=={language}=='):
                     in_lang = True
 
+                # Collect line as part of the entry
                 if in_lang == True:
                     entries.append(line.strip())
 
             if entries:
                 page_contents[word] = "\n".join(entries)
-        
+
+        # If the number of pages requested is large enough, it has to be done with multiple successive requests using this "continue" key
         if "continue" not in data:
             break
 

@@ -9,6 +9,10 @@ import re
 from src.api_requests import get_category_members, get_pages_as_json
 
 def run(api_url, language, headers):
+    if None in [api_url, language, headers]:
+        print("ERROR: You not indicate you are working with Wiktionary this session. Please reset this tool and try again.")
+        return
+
     '''
     TO DO: Allow this to function without having to do get_category_members; this is just to prove it works 
     '''
