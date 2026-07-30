@@ -5,9 +5,12 @@ This contains functions for accessing cached data as json files so that
 '''
 
 import json
+import os
 
 # Accesses write to cache file as json
 def write_json(filename, dictionary):
+    if "cache" not in os.listdir("src/"): # Added to account for a missing cache folder
+        os.makedirs("cache",exist_ok=True)
     f = open(f'cache/{filename}.json', "w")
     json.dump(dictionary, f)
     f.close()
@@ -20,6 +23,3 @@ def read_json(filename):
     ret = json.load(f)
     f.close()
     return ret
-
-
-    
