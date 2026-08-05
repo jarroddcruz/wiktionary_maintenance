@@ -14,7 +14,7 @@ This work is being conducted at the Machine Learning for Endangered Language Doc
         * get_entry_wikitext.py: Retrieves wikitext of entries in a certain Wiktionary category
         * compare_headwords.py: Compares entries found in a specified spreadsheet and a Wiktionary category
         <!--* batch_operations.py:-->
-        <!--* harvest_corpora.py:-->
+        * harvest_corpora.py: Harvests example sentences from a dictionary of headwords and a provided corpus.
 
 # How to contribute
 If you would like to contribute to this project, pick an active Issue, make your own branch to implement your solution, and submit a pull request. Feel free to write under the issue or contact me, @jarroddcruz, for any clarification. Here are some things to consider:
