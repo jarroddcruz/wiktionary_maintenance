@@ -19,7 +19,7 @@ def menu(api_url, language, headers):
                    'script_name':   "src.scripts.get_entry_wikitext"},
                    
         'H'     : {'description':   "Harvest examples from your corpora based on a dictionary of headwords",
-					'script_name':   "src.scripts.example_harvest"},
+					'script_name':   "src.scripts.example_harvest.example_harvest"},
         'Q'     : {'description':   "Quit",
                    'script_name':   False},
     }

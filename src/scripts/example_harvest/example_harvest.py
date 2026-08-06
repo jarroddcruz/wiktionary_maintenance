@@ -1,14 +1,16 @@
 """
 This script fetches examples from existing corpora using a dictionary of headwords and produces a list of words and exact sentence matches found in the corpus.
 """
-
+# Imports
 import pandas as pd
 import docx as dx
 import os
 import sys
 from tqdm import tqdm as prog
 import tkinter as tk
-from tkinter import filedialog as fDialog
+from tkinter import filedialog as fDialog, messagebox as messbox
+from typing import Iterable
+
 root = tk.Tk()
 root.withdraw()
 
@@ -19,7 +21,7 @@ def ct(platform=sys.platform):
 	import subprocess as subp
 	subp.run("cls",shell=True) if platform == "win32" else subp.run("clear",shell=True)
 
-def select_list_item(items:list,query:str,*,no_newlines:bool=False,emit_index:bool=False):
+def select_list_item(items:Iterable,query:str|None=None,*,no_newlines:bool=False,emit_index:bool=False):
 	"""
 	Utility function to return an item selection from an iterable passed to it.
 	"""
@@ -31,15 +33,19 @@ def select_list_item(items:list,query:str,*,no_newlines:bool=False,emit_index:bo
 	return items[selection-1] if emit_index == False else (items[selection-1],selection-1)
 
 class Harvester:
-	def __init__(self,corpus,dictionary:pd.Series|None):
+	def __init__(self,corpus,dictionary:pd.Series|None,wl_glosses:pd.Series|None):
 		self.corpus = corpus
 		self.dictionary = dictionary
+		self.wl_glosses = wl_glosses
 
 	def harvest_examples(self):
+		"""
+		Method to harvest the examples
+		"""
 		import re
 		from colorama import Fore
 		zero_examples = []
-		save_docname = fDialog.asksaveasfilename(initialdir="output_files")
+		save_docname = fDialog.asksaveasfilename(initialdir="output_files") # Prompt a name to save the .md and .csv files as.
 		with open(f"{save_docname}.md","w",encoding="utf-8") as examples_file, open(f"{save_docname}.csv","w", encoding="utf-8") as csv_examples_file:
 			csv_examples_file.write("Headword\n")
 			for headword in prog(self.dictionary,"Harvesting Examples",unit=" headwords"):
@@ -63,6 +69,10 @@ class Harvester:
 			report_file.write(f"Headwords with zero examples: {len(zero_examples)} ; or about {len(zero_examples)/len(self.dictionary)*100:.1f}% ({len(zero_examples)}/{len(self.dictionary)}) of the corpus.")
 			report_file.close()
 		print("Report written to 'output_files' as 'harvest_report.md'")
+		if messbox.askyesno("Confirmation","Would you like to perform another harvest?",icon="question"):
+			run()
+		else:
+			ct()
 
 
 def ingest_dict(debug_mode:bool=False):
@@ -80,22 +90,23 @@ def ingest_dict(debug_mode:bool=False):
 		dictionary = pd.read_csv(dict_file)
 		dict_columns = dictionary.columns.to_list()
 		headword_label = "Chatino Word" if debug_mode else select_list_item(dict_columns,"Select your column label for target language headwords:\n")
-		#working_gloss_label = "English" if debug_mode else select_list_item(dict_columns,"Enter your column label for other language glosses of headwords:\n")
+		working_gloss_label = "English" if debug_mode else select_list_item(dict_columns,"Enter your column label for other language glosses of headwords:\n")
 		#targ_lang_examples_label = "Chatino Example" if debug_mode else select_list_item(dict_columns,"Enter your column label for target language examples:\n")
 		#working_lang_examples_label = "Spanish Example" if debug_mode else select_list_item(dict_columns,"Enter your column label for working language examples:\n")
 		sjq_headwords = dictionary[headword_label]
-		#eng_headwords = dictionary[working_gloss_label]
+		wl_gloss_headwords = dictionary[working_gloss_label]
 		#sjq_examples = dictionary[targ_lang_examples_label]
 		#es_examples = dictionary[working_lang_examples_label]
 		dict_file.close()
 	print("Dictionary Ingested!")
-	return sjq_headwords
+	return sjq_headwords,wl_gloss_headwords
 
-def create_harvester():
+def create_harvester(debug_mode:bool=False):
 	"""
 	Creates an instance of the `Harvester` class that cleans and holds sentence blocks and headwords.
 	"""
 	ct()
+
 	input("Hello, welcome to the Example Harvester.\nNext, you will be asked to select a valid .txt file that contains your corpus's examples.\nPress Enter to Continue...")
 	import re
 	filepath = fDialog.askopenfilename(
@@ -103,13 +114,17 @@ def create_harvester():
 			filetypes=[("Text files","*.txt")])
 	sjq = ingest_dict()
 	with open(filepath,encoding="utf-8") as sjq_corpus:
-		sentence_blocks = sjq_corpus.read().split("\n\n")
+		ct()
+		delim = input("What character is used to separate example sentences?\nFor a single newline, just press enter.\nSpecify newlines using '\\n' and tabs using '\\t'.\nSeparator: ")
+		if delim == "":
+			delim = "\n"
+		sentence_blocks = sjq_corpus.read().split("\n\n") if debug_mode else sjq_corpus.read().split(delim)
 		for index,s_block in enumerate(sentence_blocks):
 			sentence_blocks[index] = re.sub(r"\n"," ",s_block)
 		#print(sentence_blocks)
 	print("Harvester Created!")
-	return Harvester(sentence_blocks,sjq)
+	return Harvester(sentence_blocks,sjq[0],sjq[1])
 	
-def run(api_url, language, headers): 
-	harvester = create_harvester()
+def run(api_url="Y", language="sjq", headers="0"): 
+	harvester = create_harvester(True)
 	harvester.harvest_examples()
