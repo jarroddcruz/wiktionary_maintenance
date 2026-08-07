@@ -47,11 +47,14 @@ def select_list_item(items:Iterable,query:str|None=None,*,no_newlines:bool=False
 	return items[selection-1] if emit_index == False else (items[selection-1],selection-1)
 
 class Corpus:
+	"""
+	Defines a single text to search in for examples.
+	"""
 	def __init__(self,filename,corpus,dictionary:pd.Series|None,wl_glosses:pd.Series|None):
-		self.filename = filename
-		self.corpus = corpus
-		self.dictionary = dictionary
-		self.wl_glosses = wl_glosses
+		self.filename = filename # Base filename of the corpus as an identifier and for citation purposes.
+		self.corpus = corpus # Defines the list of sentences or blocks. This is what is iterated through to find the matching word
+		self.dictionary = dictionary # Defines the dictionary file to be used for this corpus.
+		self.wl_glosses = wl_glosses # Currently non-functional; holds working-language glosses to better contextual understanding.
 
 def harvest_examples(corpora:list[Corpus]):
 	"""
@@ -60,24 +63,26 @@ def harvest_examples(corpora:list[Corpus]):
 	import re
 	from colorama import Fore
 	zero_examples = []
+
+	# Opens the .md and .csv files to hold examples.
 	with open(os.path.join("output_files",f"examples.md"),"w",encoding="utf-8") as examples_file, open(os.path.join("output_files",f"examples.csv"),"w", encoding="utf-8") as csv_examples_file:
-		dictionary = corpora[0].dictionary
-		for headword in prog(dictionary,"Harvesting Examples",unit=" headwords"):
-			csv_examples_file.write("Headword\n")
-			examples_file.write(f"Headword: {headword}\n{'-'*len(headword)}\n")
-			csv_examples_file.write(f"{headword},")
-			examples = 0
-			corpus_ex_list = []
-			for corpus in corpora:
-				corpExamples = 0
-				for index,pot_example in enumerate(corpus.corpus):
-					if re.search(rf" {headword} ",pot_example):
-						examples_file.write(f"{re.sub(f' {headword} ',f' <span style="color:red">{headword}</span> ',pot_example)} *({corpus.filename})*\n\n")
-						csv_examples_file.write(f"{pot_example},") # Need a way to get citation in CSV
-						corpExamples += 1
-						examples += 1
-				corpus_ex_list.append(corpExamples)
-			examples_file.write("\n---\n")
+		dictionary = corpora[0].dictionary # To avoid redundancy and over-iteration, the first corpus's dictionary is used. Will iron this out.
+		for headword in prog(dictionary,"Harvesting Examples",unit=" headwords"): # For each headword in the dictionary
+			csv_examples_file.write("Headword\n") # Writes a header to the CSV
+			examples_file.write(f"Headword: {headword}\n{'-'*len(headword)}\n") # Writes a header to the MD
+			csv_examples_file.write(f"{headword},") # Writes the headword to the CSV.
+			examples = 0 # Count total examples
+			corpus_ex_list = [] # Holds counts of examples for each corpus in sequence for later use
+			for corpus in corpora: # For each corpus
+				corpExamples = 0 # Count examples in each corpus
+				for index,pot_example in enumerate(corpus.corpus): # For each sentence, or 'potential example':
+					if re.search(rf" {headword} ",pot_example): # If the headword, by itself, appears in the potential example
+						examples_file.write(f"{re.sub(f' {headword} ',f' <span style="color:red">{headword}</span> ',pot_example)} *({corpus.filename})*\n\n") # Writes the example to the MD file with the instance of the headword highlighted in red.
+						csv_examples_file.write(f"{pot_example},") # Need a way to get citation in CSV --- Writes the example to the CSV
+						corpExamples += 1 # Increments number of examples in this corpus
+						examples += 1 # Incrememts number of examples for this headword
+				corpus_ex_list.append(corpExamples) # Update the list of corpus values until there are no more corpora.
+			examples_file.write("\n---\n") # Separator for metrics
 			for corp,numexamples in zip(corpora,corpus_ex_list):
 				examples_file.write(f"Examples found in {corp.filename}: **{numexamples}**\n\n")
 			examples_file.write(f"Total Examples Found for Headword: **{examples}**\n\n")
